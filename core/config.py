@@ -6,7 +6,7 @@ class Config(BaseSettings):
     ideogram_api_key: str
     # google gemini
     gemini_api_key: str
-    gemini_model: str = "gemini-1.5-flash"
+    gemini_model: str = "gemini-1.5-flash-8b"
 
 
 conf = Config()

@@ -1,5 +1,4 @@
 import tempfile
-from typing import Optional
 
 import uvicorn
 from fastapi import FastAPI
@@ -10,31 +9,11 @@ from core.ai import gen_prompt_from_image_mask_and_user, edit_image_by_mask_and_
 from core.img import save_image_and_mask
 
 app = FastAPI()
-# URL_SUFFIX used to limit size of image
-URL_SUFFIX = "?fm=jpg&q=80&w=1080&h=1080&fit=max"
 
 
-class Image(BaseModel):
-    id: str
-    url: str
-    category: str
-    description: str
-
-
-class ImagesResponse(BaseModel):
-    images: list[Image]
-
-
-@app.get("/api/image/random")
-def image_random(limit: int = 10) -> ImagesResponse:
-    pass
-
-
-@app.get("/api/image/search")
-def image_search(
-    query: str, limit: int = 10, category: Optional[str] = None
-) -> ImagesResponse:
-    pass
+@app.get("/ping")
+def ping():
+    return "pong"
 
 
 class EditRequest(BaseModel):
