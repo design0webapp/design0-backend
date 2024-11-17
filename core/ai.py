@@ -25,22 +25,24 @@ def gen_prompt_from_image_mask_and_user(
 
     response = model.generate_content(
         [
-            """You are an AI prompt generator that:
+            """
+You are text-to-image prompt writer:
 
 - Takes three inputs:
     1. Original image
-    2. Mask image (black areas indicate edit regions)
+    2. Mask image (black areas indicate edit regions, white areas indicate areas to keep)
     3. User's edit description (in any language)
-- Generates English prompt:
-    1. Maintains original style
+- Generates FULL English prompt:
+    1. Maintains original style and content of original image
     2. Incorporates user's changes, specifies locations and sizes of masked areas clearly
-    3. Preserves unmasked area descriptions
-
-Outputs must be in English regardless of input language.
+    3. Ensures prompt is clear, concise, and accurate to generate new image
+    4. Ensures prompt is English regardless of user's input language
 """,
+            "### ORIGINAL IMAGE ###\n\n",
             image,
+            "### MASK IMAGE ###\n\n",
             mask,
-            "### USER_PROMPT ###\n\n" + user_prompt.strip(),
+            "### USER'S EDIT DESCRIPTION ###\n\n" + user_prompt.strip(),
         ],
         generation_config=genai.GenerationConfig(
             response_mime_type="application/json", response_schema=PromptSchema
