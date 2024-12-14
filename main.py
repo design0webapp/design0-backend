@@ -33,8 +33,8 @@ def image_edit(req: EditRequest):
         image_path, mask_path = save_image_and_mask(
             temp_dir, req.image_url, req.polygons
         )
-        prompts = gen_prompt_from_image_mask_and_user(image_path, mask_path, req.prompt)
-        data = edit_image_by_mask_and_prompt(image_path, mask_path, prompts)
+        # prompts = gen_prompt_from_image_mask_and_user(image_path, mask_path, req.prompt)
+        data = edit_image_by_mask_and_prompt(image_path, mask_path, req.prompt)
         return EditResponse(url=data["url"])
 
 
