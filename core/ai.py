@@ -63,7 +63,7 @@ def edit_image_by_mask_and_prompt(
                 data={
                     "prompt": prompt,
                     "model": "V_2_TURBO",
-                    "magic_prompt_option": "AUTO",
+                    "magic_prompt_option": "ON",
                     "style_type": "AUTO",
                 },
                 files={
