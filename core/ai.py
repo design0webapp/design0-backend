@@ -1,3 +1,5 @@
+import base64
+from io import BytesIO
 from pathlib import Path
 
 import PIL
@@ -20,7 +22,13 @@ def edit_image_by_prompt(image_url: str, prompt: str):
         ],
         config=types.GenerateContentConfig(response_modalities=["Text", "Image"]),
     )
-    return response.candidates[0].content.parts[0].inline_data
+    image = PIL.Image.open(
+        BytesIO(response.candidates[0].content.parts[0].inline_data.data)
+    )
+    # Convert PIL Image to base64 string
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
 
 def edit_image_by_mask_and_prompt(

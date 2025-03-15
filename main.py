@@ -33,7 +33,7 @@ def image_edit(req: EditRequest):
             temp_dir, req.image_url, req.polygons
         )
         data = edit_image_by_mask_and_prompt(image_path, mask_path, req.prompt)
-        return EditResponse(url=data["url"])
+        return {"url": data["url"]}
 
 
 class EditWithoutMaskRequest(BaseModel):
@@ -43,7 +43,8 @@ class EditWithoutMaskRequest(BaseModel):
 
 @app.post("/api/image/edit_without_mask")
 def image_edit_without_mask(req: EditWithoutMaskRequest):
-    return edit_image_by_prompt(req.image_url, req.prompt)
+    base64img = edit_image_by_prompt(req.image_url, req.prompt)
+    return {"base64": base64img}
 
 
 if __name__ == "__main__":
