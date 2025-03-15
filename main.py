@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from loguru import logger
 from pydantic import BaseModel
 
-from core.ai import gen_prompt_from_image_mask_and_user, edit_image_by_mask_and_prompt
+from core.ai import edit_image_by_mask_and_prompt, edit_image_by_prompt
 from core.img import save_image_and_mask
 
 app = FastAPI()
@@ -28,14 +28,22 @@ class EditResponse(BaseModel):
 
 @app.post("/api/image/edit")
 def image_edit(req: EditRequest):
-    # Create a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         image_path, mask_path = save_image_and_mask(
             temp_dir, req.image_url, req.polygons
         )
-        # prompts = gen_prompt_from_image_mask_and_user(image_path, mask_path, req.prompt)
         data = edit_image_by_mask_and_prompt(image_path, mask_path, req.prompt)
         return EditResponse(url=data["url"])
+
+
+class EditWithoutMaskRequest(BaseModel):
+    image_url: str
+    prompt: str
+
+
+@app.post("/api/image/edit_without_mask")
+def image_edit_without_mask(req: EditWithoutMaskRequest):
+    return edit_image_by_prompt(req.image_url, req.prompt)
 
 
 if __name__ == "__main__":

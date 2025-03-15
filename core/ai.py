@@ -1,56 +1,26 @@
-import json
 from pathlib import Path
 
-import PIL.Image
-import google.generativeai as genai
+import PIL
 import requests
-import typing_extensions as typing
+from google import genai
+from google.genai import types
 from loguru import logger
 
 from .config import conf
 
-genai.configure(api_key=conf.gemini_api_key)
+gemini_client = genai.Client(api_key=conf.gemini_api_key)
 
 
-def gen_prompt_from_image_mask_and_user(
-    image_path: Path, mask_path: Path, user_prompt: str
-) -> str:
-    class PromptSchema(typing.TypedDict):
-        prompt: str
-
-    model = genai.GenerativeModel(model_name=conf.gemini_model)
-
-    image = PIL.Image.open(image_path)
-    mask = PIL.Image.open(mask_path)
-
-    response = model.generate_content(
-        [
-            """
-You are text-to-image prompt writer:
-
-- Takes three inputs:
-    1. Original image
-    2. Mask image (black areas indicate edit regions, white areas indicate areas to keep)
-    3. User's edit description (in any language)
-- Generates FULL English prompt:
-    1. Maintains original style and content of original image
-    2. Incorporates user's changes, specifies locations and sizes of masked areas clearly
-    3. Ensures prompt is clear, concise, and accurate to generate new image
-    4. Ensures prompt is English regardless of user's input language
-""",
-            "### ORIGINAL IMAGE ###\n\n",
-            image,
-            "### MASK IMAGE ###\n\n",
-            mask,
-            "### USER'S EDIT DESCRIPTION ###\n\n" + user_prompt.strip(),
+def edit_image_by_prompt(image_url: str, prompt: str):
+    response = gemini_client.models.generate_content(
+        model="gemini-2.0-flash-exp",
+        contents=[
+            prompt,
+            PIL.Image.open(requests.get(image_url, stream=True).raw),
         ],
-        generation_config=genai.GenerationConfig(
-            response_mime_type="application/json", response_schema=PromptSchema
-        ),
+        config=types.GenerateContentConfig(response_modalities=["Text", "Image"]),
     )
-    prompt = json.loads(response.text)["prompt"]
-    logger.info(f"gen prompt: '{prompt}' from '{user_prompt.strip()}'")
-    return prompt
+    return response.candidates[0].content.parts[0].inline_data
 
 
 def edit_image_by_mask_and_prompt(
