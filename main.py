@@ -47,6 +47,7 @@ class UpscaleRequest(BaseModel):
     image_url: str
 
 
+@app.post("/api/image/upscale")
 def image_upscale(req: UpscaleRequest):
     base64img = upscale_image(req.image_url)
     return {"base64": base64img}
