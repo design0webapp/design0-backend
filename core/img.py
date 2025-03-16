@@ -6,6 +6,16 @@ import numpy as np
 import requests
 
 
+def save_image(folder: str, image_url: str) -> Path:
+    # Download the image
+    response = requests.get(image_url)
+    image_path = Path(folder) / "image"
+    with open(image_path, "wb") as f:
+        f.write(response.content)
+
+    return image_path
+
+
 def save_image_and_mask(
     folder: str, image_url: str, polygons: List[List[List[float]]]
 ) -> (Path, Path):

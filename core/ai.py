@@ -1,5 +1,4 @@
 import base64
-from io import BytesIO
 from pathlib import Path
 
 import requests
@@ -20,15 +19,10 @@ def edit_image_by_prompt(image_url: str, prompt: str):
             prompt,
             Image.open(requests.get(image_url, stream=True).raw),
         ],
-        config=types.GenerateContentConfig(response_modalities=["Text", "Image"]),
+        config=types.GenerateContentConfig(response_modalities=["Image"]),
     )
-    image = Image.open(
-        BytesIO(response.candidates[0].content.parts[0].inline_data.data)
-    )
-    # Convert PIL Image to base64 string
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
+    image_bytes: bytes = response.candidates[0].content.parts[0].inline_data.data
+    return base64.standard_b64encode(image_bytes).decode("utf-8")
 
 
 def edit_image_by_mask_and_prompt(
@@ -56,25 +50,22 @@ def edit_image_by_mask_and_prompt(
     return data
 
 
-def upscale_image(image_url: str) -> str:
-    # download image and send to ideogram
-    resp = requests.get(image_url, stream=True)
-    resp.raise_for_status()
-    resp = requests.post(
-        "https://api.ideogram.ai/upscale",
-        files={
-            "image_file": resp.raw,
-        },
-        headers={"Api-Key": conf.ideogram_api_key},
-    )
-    resp.raise_for_status()
+def upscale_image(image_path: Path) -> str:
+    with open(image_path, "rb") as image_file:
+        resp = requests.post(
+            "https://api.ideogram.ai/upscale",
+            data={"image_request": "{}"},
+            files={
+                "image_file": image_file,
+            },
+            headers={"Api-Key": conf.ideogram_api_key},
+        )
+        resp.raise_for_status()
     data = resp.json()["data"][0]
     logger.info(f"upscaled image: {data}")
     url = data["url"]
     # turn url to base64
     resp = requests.get(url)
     resp.raise_for_status()
-    image = Image.open(resp.content)
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
+    image_bytes: bytes = resp.content
+    return base64.standard_b64encode(image_bytes).decode("utf-8")

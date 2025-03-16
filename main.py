@@ -6,7 +6,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from core.ai import edit_image_by_mask_and_prompt, edit_image_by_prompt, upscale_image
-from core.img import save_image_and_mask
+from core.img import save_image, save_image_and_mask
 
 app = FastAPI()
 
@@ -49,8 +49,10 @@ class UpscaleRequest(BaseModel):
 
 @app.post("/api/image/upscale")
 def image_upscale(req: UpscaleRequest):
-    base64img = upscale_image(req.image_url)
-    return {"base64": base64img}
+    with tempfile.TemporaryDirectory() as temp_dir:
+        image_path = save_image(temp_dir, req.image_url)
+        base64img = upscale_image(image_path)
+        return {"base64": base64img}
 
 
 if __name__ == "__main__":
