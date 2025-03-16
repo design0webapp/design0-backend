@@ -2,11 +2,11 @@ import base64
 from io import BytesIO
 from pathlib import Path
 
-import PIL
 import requests
 from google import genai
 from google.genai import types
 from loguru import logger
+from PIL import Image
 
 from .config import conf
 
@@ -18,11 +18,11 @@ def edit_image_by_prompt(image_url: str, prompt: str):
         model="gemini-2.0-flash-exp",
         contents=[
             prompt,
-            PIL.Image.open(requests.get(image_url, stream=True).raw),
+            Image.open(requests.get(image_url, stream=True).raw),
         ],
         config=types.GenerateContentConfig(response_modalities=["Text", "Image"]),
     )
-    image = PIL.Image.open(
+    image = Image.open(
         BytesIO(response.candidates[0].content.parts[0].inline_data.data)
     )
     # Convert PIL Image to base64 string
@@ -53,4 +53,20 @@ def edit_image_by_mask_and_prompt(
             resp.raise_for_status()
     data = resp.json()["data"][0]
     logger.info(f"edited image: {data}")
+    return data
+
+
+def upscale_image(image_url: str) -> dict:
+    response = requests.get(image_url, stream=True)
+    response.raise_for_status()
+    resp = requests.post(
+        "https://api.ideogram.ai/upscale",
+        files={
+            "image_file": response.raw,
+        },
+        headers={"Api-Key": conf.ideogram_api_key},
+    )
+    resp.raise_for_status()
+    data = resp.json()["data"][0]
+    logger.info(f"upscaled image: {data}")
     return data

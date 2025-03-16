@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from loguru import logger
 from pydantic import BaseModel
 
-from core.ai import edit_image_by_mask_and_prompt, edit_image_by_prompt
+from core.ai import edit_image_by_mask_and_prompt, edit_image_by_prompt, upscale_image
 from core.img import save_image_and_mask
 
 app = FastAPI()
@@ -20,10 +20,6 @@ class EditRequest(BaseModel):
     image_url: str
     polygons: list[list[list[float]]]
     prompt: str
-
-
-class EditResponse(BaseModel):
-    url: str
 
 
 @app.post("/api/image/edit")
@@ -45,6 +41,15 @@ class EditWithoutMaskRequest(BaseModel):
 def image_edit_without_mask(req: EditWithoutMaskRequest):
     base64img = edit_image_by_prompt(req.image_url, req.prompt)
     return {"base64": base64img}
+
+
+class UpscaleRequest(BaseModel):
+    image_url: str
+
+
+def image_upscale(req: UpscaleRequest):
+    data = upscale_image(req.image_url)
+    return {"url": data["url"]}
 
 
 if __name__ == "__main__":
