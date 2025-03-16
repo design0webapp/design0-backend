@@ -48,8 +48,8 @@ class UpscaleRequest(BaseModel):
 
 
 def image_upscale(req: UpscaleRequest):
-    data = upscale_image(req.image_url)
-    return {"url": data["url"]}
+    base64img = upscale_image(req.image_url)
+    return {"base64": base64img}
 
 
 if __name__ == "__main__":
